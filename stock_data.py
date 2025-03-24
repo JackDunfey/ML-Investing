@@ -8,7 +8,7 @@ def get_stock_data(ticker): # implements local cache for data
     if os.path.exists(f"stocks/{ticker}.csv"):
         return pd.read_csv(f"stocks/{ticker}.csv")
     
-    df = yf.download("AAPL", auto_adjust=True, actions=False, progress=False, multi_level_index=False)
+    df = yf.download("AAPL", start="2000-01-01", auto_adjust=True, actions=False, progress=False, multi_level_index=False)
     df["date"] = pd.to_datetime(df.index)
     df["price"] = df["Close"]
     df.drop(labels=["Close", "Open", "High", "Low", "Volume"], axis=1, inplace=True)
