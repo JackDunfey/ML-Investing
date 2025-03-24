@@ -2,24 +2,19 @@ import numpy as np
 import pandas as pd
 from requests import get
 import os
-
-# API_KEY = "M3HSAOBLJARR5MZR"
-API_KEY = "X9QMEHJAZRGU8AYG"
+import yfinance as yf
 
 def get_stock_data(ticker): # implements local cache for data
     if os.path.exists(f"stocks/{ticker}.csv"):
         return pd.read_csv(f"stocks/{ticker}.csv")
     
-    json = get(f"https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY_ADJUSTED&symbol={ticker}&apikey={API_KEY}&outputsize=full", headers={
-        "User-Agent": "Albanian Swan Browser/6.7"
-    }).json()
-    print(json)
-    raw_data = [{"date": k, "price": v["5. adjusted close"]} for k,v in json["Weekly Adjusted Time Series"].items()]
-    df = pd.DataFrame(raw_data)
-    df["date"] = pd.to_datetime(df["date"])
-    df["price"] = df["price"].astype(float)
+    df = yf.download("AAPL", auto_adjust=True, actions=False, progress=False, multi_level_index=False)
+    df["date"] = pd.to_datetime(df.index)
+    df["price"] = df["Close"]
+    df.drop(labels=["Close", "Open", "High", "Low", "Volume"], axis=1, inplace=True)
     df = df.sort_values(by="date", ascending=True)
-    df.reset_index(drop=True)
+    df.reset_index(drop=True, inplace=True)
+    df = df.dropna()
     df.to_csv(f"stocks/{ticker}.csv", index=False)
     return df
 
@@ -74,3 +69,7 @@ def get_normalized_data(ticker):
 
 
     return df
+
+
+if __name__ == "__main__":
+    print(get_stock_data("MSFT"))
